@@ -1,21 +1,19 @@
-from django.shortcuts import render, redirect
-from django.http import HttpResponse
-from django.contrib.auth import authenticate, login
-from django.views.decorators.csrf import csrf_exempt
-import random
-from rest_framework import serializers
-from rest_framework.permissions import IsAdminUser
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
-from rest_framework import generics
-from django.views.generic import CreateView
-from django.contrib.auth.views import LoginView
-from django.urls import reverse_lazy
 from .serializers import RentalSerializer , CarListingSerializer, CarModelSerializer, MakeSerializer, UserSerializer, ReviewSerializer, ServiceSerializer
-from .forms import UserSignUpForm
-
 from .models import  Rental, CarListing, CarModel, Make, User, Review, Service
-from django.shortcuts import redirect
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
+from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth import authenticate, login
+from rest_framework import generics, permissions
+from django.contrib.auth.views import LoginView
+from django.shortcuts import render, redirect
+from rest_framework.response import Response
+from django.views.generic import CreateView
+from rest_framework import serializers
+from django.urls import reverse_lazy
+from .forms import UserSignUpForm
+from django.urls import reverse
+import random
+
 
 def index(request):
     return render(request, 'base.html')
@@ -27,13 +25,7 @@ class CarList(generics.ListCreateAPIView):
     serializer_class = CarListingSerializer
 
 
-        
-    # def get_queryset(self):
-    #     queryset = CarListing.objects.all()
-    #     car_model = self.request.query_params.get('car_model')
-    #     if car_model is not None:
-    #         queryset = queryset.filter(car_model=car_model)
-    #     return queryset
+
 
 class CarDetail(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = CarListingSerializer
@@ -44,9 +36,21 @@ class CarDetail(generics.RetrieveUpdateDestroyAPIView):
 # rentals(orders) CRUD
 
 class RentalList(generics.ListCreateAPIView):
-    # permission_classes = [IsAdminUser]
     queryset = Rental.objects.all()
     serializer_class = RentalSerializer
+
+
+    def get_permissions(self):
+        if self.request.user.is_staff:
+            return [permissions.IsAdminUser()]
+        else:
+            return [permissions.IsAuthenticated()]
+
+    def get_queryset(self):
+        if self.request.user.is_staff:
+            return Rental.objects.all()
+        else:
+            return Rental.objects.filter(rent_client=self.request.user)
 
     def perform_create(self, serializer):
         rent_start = serializer.validated_data['rent_start']
@@ -66,28 +70,70 @@ class RentalList(generics.ListCreateAPIView):
         serializer.save(rent_client=self.request.user,car_info=chosen_car, rent_employee=employee)
 
 
-
-
 class RentalDetail(generics.RetrieveUpdateDestroyAPIView):
-    permission_classes = [IsAdminUser]
     serializer_class = RentalSerializer
-    queryset = Rental.objects.all()
+
+    def get_permissions(self):
+        if self.request.user.is_staff:
+            return [permissions.IsAdminUser()]
+        else:
+            return [permissions.IsAuthenticated()]
+
+    def get_queryset(self):
+        if self.request.user.is_staff:
+            return Rental.objects.all()
+        else:
+            return Rental.objects.filter(rent_client=self.request.user)
 
 
 # reviews
-class ReviewList(generics.ListCreateAPIView):
-    # permission_classes = [IsAdminUser]
+
+class CreateReview(generics.CreateAPIView):
+    serializer_class = ReviewSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def perform_create(self, serializer):
+        pk = self.kwargs.get('pk')
+        rental = Rental.objects.get(pk=pk)
+        serializer.save(rental=rental)
+
+
+
+class ReviewList(generics.ListAPIView):
     queryset = Review.objects.all()
     serializer_class = ReviewSerializer
-class ReviewDetail(generics.RetrieveUpdateDestroyAPIView):
-    permission_classes = [IsAdminUser]
+
+    def get_permissions(self):
+        if self.request.user.is_staff:
+            return [permissions.IsAdminUser()]
+        else:
+            return [permissions.IsAuthenticated()]
+
+    def get_queryset(self):
+        if self.request.user.is_staff:
+            return Review.objects.all()
+        else:
+            return Review.objects.filter(rental__rent_client=self.request.user)
+
+class ReviewDetail(generics.RetrieveDestroyAPIView):
     serializer_class = ReviewSerializer
-    queryset = Review.objects.all()
+
+
+    def get_permissions(self):
+        if self.request.user.is_staff:
+            return [permissions.IsAdminUser()]
+        else:
+            return [permissions.IsAuthenticated()]
+
+    def get_queryset(self):
+        if self.request.user.is_staff:
+            return Review.objects.all()
+        else:
+            return Review.objects.filter(rental__rent_client=self.request.user)
 
 
 # service
 class ServiceList(generics.ListCreateAPIView):
-    # permission_classes = [IsAdminUser]
     queryset = Service.objects.all()
     serializer_class = ServiceSerializer
 
@@ -120,6 +166,9 @@ class UserDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = User.objects.all()
 
 
+class ReviewCreateView(generics.CreateAPIView):
+    queryset = Review.objects.all()
+    serializer_class = ReviewSerializer
 
 
 

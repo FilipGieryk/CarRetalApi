@@ -1,8 +1,8 @@
-from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator, ValidationError
-from datetime import datetime
 from django.contrib.auth.models import AbstractUser
 from datetime import timedelta
+from datetime import datetime
+from django.db import models
 
 class Make(models.Model):
     make = models.CharField('Make', max_length=150, unique = True)
@@ -53,33 +53,9 @@ class User(AbstractUser):
         return f'{self.first_name} {self.last_name}'
 
 
-# class Client(models.Model):
-#     user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True)
-#     balance = models.FloatField(default = 0)
-#     money_spent = models.FloatField(default = 0)
-
-#     def __str__(self):
-#         return f'{self.first_name} {self.last_name}'
 
 
-# class Employee(models.Model):
-#     user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True)
-#     rentals_made = models.IntegerField(default = 0)
 
-#     def __str__(self):
-#         return f'{self.first_name} {self.last_name}'
-
-
-class Review(models.Model):
-    reviewer = models.ForeignKey(User, on_delete = models.CASCADE, related_name = 'client_review')
-    reviewed_employee = models.ForeignKey(User, on_delete = models.CASCADE, related_name = 'employee_review')
-    comment = models.CharField(max_length=999)
-    rating = models.IntegerField(
-        validators = [
-            MaxValueValidator(5),
-            MinValueValidator(1)
-        ],
-    )
 
 
 
@@ -99,12 +75,7 @@ class Rental(models.Model):
         basic_price = self.car_info.basic_price
         self.price = days_count * basic_price
         super(Rental, self).save(*args, **kwargs)
-    # @property
-    # def duration(self):
-    #     days_count = (self.rent_end - self.rent_start) // timedelta(days=1)
-    #     basic_price = self.car_info.basic_price
-    #     return days_count * basic_price
-        # return (self.rent_end - self.rent_start) // timedelta(days=1)
+
 
     def __str__(self):
         return f'{self.rent_client.first_name} {self.rent_client.last_name} - {self.car_info.registration_plate}'
@@ -113,7 +84,15 @@ class Rental(models.Model):
         if self.rent_start > self.rent_end:
             raise ValidationError('start date cannot be bigger than end date')
 
-
+class Review(models.Model):
+    rental = models.ForeignKey('Rental', on_delete=models.CASCADE)
+    comment = models.CharField(max_length=999)
+    rating = models.IntegerField(
+        validators = [
+            MaxValueValidator(5),
+            MinValueValidator(1)
+        ],
+    )
 
 class Service(models.Model):
     damage = models.CharField(max_length=299)

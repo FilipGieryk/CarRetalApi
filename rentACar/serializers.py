@@ -1,18 +1,10 @@
-from rest_framework import serializers
 from .models import Rental, CarListing, CarModel, Make, User, Review, Service
-import datetime
+from rest_framework import serializers
 from django.db.models import Avg
 
-# class EmployeeSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = Employee
-#         fields ='__all__'
 
         
-# class ClientSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = Client
-#         fields ='__all__'
+
 
 
 
@@ -29,16 +21,7 @@ class MakeSerializer(serializers.ModelSerializer):
         model = Make
         fields ='__all__'
 
-# class ClientSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = Client
-#         fields ='__all__'
 
-# class EmployeeSerializer(serializers.ModelSerializer):
-#     User = UserSerializer()
-#     class Meta:
-#         model = Employee
-#         fields = '__all__'
 
 
 class RentalSerializer(serializers.ModelSerializer):
@@ -46,6 +29,14 @@ class RentalSerializer(serializers.ModelSerializer):
     rent_employee = serializers.SlugRelatedField(read_only=True, slug_field='username')
     car_info = serializers.SlugRelatedField(read_only=True, slug_field='registration_plate')
     price = serializers.ReadOnlyField()
+
+    create_review_url = serializers.HyperlinkedIdentityField(
+        view_name='create-review',
+        lookup_field='pk'  
+    )
+    class Meta:
+        model = Rental
+        fields ="__all__"
 
     def to_representation(self,instance):
         if instance.rent_employee.is_employee:
@@ -72,14 +63,11 @@ class RentalSerializer(serializers.ModelSerializer):
 
 
 
-    class Meta:
-        model = Rental
-        fields ="__all__"
+    
   
 
 class ReviewSerializer(serializers.ModelSerializer):
-    reviewer = serializers.SlugRelatedField(queryset=User.objects.all(), slug_field='username')
-    reviewed_employee = serializers.SlugRelatedField(queryset=User.objects.all(), slug_field='username')
+    rental = serializers.SlugRelatedField(read_only=True, slug_field = 'id')
     class Meta:
         model = Review
         fields ='__all__'
@@ -94,7 +82,6 @@ class UserSerializer(serializers.ModelSerializer):
     rentals_given = RentalSerializer(read_only=True, many=True, source='employee_rent')
     rating = serializers.SerializerMethodField()
     def get_rating(self, ob):
-        print(ob.employee_review.all())
         return ob.employee_review.all().aggregate(Avg('rating'))['rating__avg']
 
 
