@@ -85,7 +85,7 @@ class Rental(models.Model):
             raise ValidationError('start date cannot be bigger than end date')
 
 class Review(models.Model):
-    rental = models.ForeignKey('Rental', on_delete=models.CASCADE)
+    rental = models.ForeignKey('Rental', on_delete=models.CASCADE, related_name = 'reviews')
     comment = models.CharField(max_length=999)
     rating = models.IntegerField(
         validators = [

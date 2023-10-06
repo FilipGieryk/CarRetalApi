@@ -10,18 +10,25 @@
   <body>
     <header class="header">
       <div class="container">
-        <a href="{%url 'index'%}" class="logo">Todo</a>
-        <nav class="nav">
-          <a href="{%url 'index'%}"><i class="bi bi-house-fill"></i> Home</a>
+        <br class="nav">
           {% if request.user.is_authenticated %}
-          <a href="#"><i class="bi bi-list-task"></i> My Tasks</a>
-          <a href="#"><i class="bi bi-plus-circle"></i> Create Task</a>
-          <a href="#">Hi {{request.user | title}}</a>
+          <a href="#">Hi {{request.user | title}}</a></br>
           <a href="{% url 'logout' %}" class="btn btn-outline">Logout</a>
           {% else %}
           <a href="{% url 'login' %}" class="btn btn-outline">Login</a>
           <a href="#" class="btn btn-primary">Join Now</a>
           {% endif %}
+          <p>views</p>
+          <p>Only for staff users:</p>
+          <a href="http://127.0.0.1:8000/users">users</a></br>
+          <a href="http://127.0.0.1:8000/makes">car makes</a></br>
+          <a href="http://127.0.0.1:8000/models">car models</a></br>
+          <p>basic view for all detail view for staff users</p>
+          <a href="http://127.0.0.1:8000/cars">cars</a></br>
+          <p>basic usres can only see views where ther're included staff can see everything</p>
+          <a href="http://127.0.0.1:8000/rentals">rent orders</a></br>
+          <a href="http://127.0.0.1:8000/reviews">rent reviews</a></br>
+          <a href="http://127.0.0.1:8000/services">car services</a>
         </nav>
       </div>
     </header>
@@ -35,8 +42,7 @@
     <footer class="footer">
       <div class="container">
         <p>
-          © Copyright {% now "Y" %} by
-          <a href="https://www.pythontutorial.net">Python Tutorial</a>
+          <a href="https://www.pythontutorial.net"></a>
         </p>
       </div>
     </footer>
