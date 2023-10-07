@@ -3,7 +3,7 @@ from .models import  Rental, CarListing, CarModel, Make, User, Review, Service
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth import authenticate, login
-from rest_framework import generics, permissions
+from rest_framework import generics, permissions, viewsets
 from django.contrib.auth.views import LoginView
 from django.shortcuts import render, redirect
 from rest_framework.response import Response
@@ -32,53 +32,6 @@ class AllowStaffToCreate(permissions.BasePermission):
 
 
 
-# service
-class ServiceList(generics.ListCreateAPIView):
-    permission_classes = [IsAdminUser]
-    queryset = Service.objects.all()
-    serializer_class = ServiceSerializer
-
-class ServiceDetail(generics.RetrieveUpdateDestroyAPIView):
-    permission_classes = [IsAdminUser]
-    serializer_class = ServiceSerializer
-    queryset = Service.objects.all()
-
-
-
-
-
-# user CRUD
-
-class UserList(generics.ListCreateAPIView):
-    permission_classes = [IsAdminUser]
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
-
-class UserDetail(generics.RetrieveUpdateDestroyAPIView):
-    permission_classes = [IsAdminUser]
-    serializer_class = UserDetailSerializer
-    queryset = User.objects.all()
-
-
-
-
-
-
-# done
-
-class CarList(generics.ListCreateAPIView):
-    queryset = CarListing.objects.all()
-    serializer_class = CarListingSerializer
-    permission_classes = [AllowStaffToCreate]
-
-
-
-class CarDetail(generics.RetrieveUpdateDestroyAPIView):
-    serializer_class = CarListingDetailSerializer
-    queryset = CarListing.objects.all()
-    permission_classes = [IsAdminUser]
-
-
 
 
 
@@ -105,38 +58,22 @@ class UserLoginView(LoginView):
 #         messages.error(self.request,"invalid username or password")
 #         return self.render_to_response(self.get_context.data(form=form))
 
-
-class ReviewDetail(generics.RetrieveDestroyAPIView):
-    serializer_class = ReviewSerializer
-
-
-    def get_permissions(self):
-        if self.request.user.is_staff:
-            return [permissions.IsAdminUser()]
-        else:
-            return [permissions.IsAuthenticated()]
-
-    def get_queryset(self):
-        if self.request.user.is_staff:
-            return Review.objects.all()
-        else:
-            return Review.objects.filter(rental__rent_client=self.request.user)
-
-class ReviewList(generics.ListAPIView):
+class ReviewViewSet(viewsets.ModelViewSet):
     queryset = Review.objects.all()
     serializer_class = ReviewSerializer
 
+    def get_queryset(self):
+        if self.request.user.is_staff:
+            return Review.objects.all()
+        else:
+            return Review.objects.filter(rental__rent_client=self.request.user)
+
     def get_permissions(self):
         if self.request.user.is_staff:
             return [permissions.IsAdminUser()]
         else:
             return [permissions.IsAuthenticated()]
 
-    def get_queryset(self):
-        if self.request.user.is_staff:
-            return Review.objects.all()
-        else:
-            return Review.objects.filter(rental__rent_client=self.request.user)
 
 class CreateReview(generics.CreateAPIView):
     serializer_class = ReviewSerializer
@@ -156,22 +93,10 @@ class CreateService(generics.CreateAPIView):
         pk = self.kwargs.get('pk')
         damaged_car = CarListing.objects.get(pk=pk)
         serializer.save(damaged_car=damaged_car)
-class RentalDetail(generics.RetrieveUpdateDestroyAPIView):
-    serializer_class = RentalSerializer
 
-    def get_permissions(self):
-        if self.request.user.is_staff:
-            return [permissions.IsAdminUser()]
-        else:
-            return [permissions.IsAuthenticated()]
 
-    def get_queryset(self):
-        if self.request.user.is_staff:
-            return Rental.objects.all()
-        else:
-            return Rental.objects.filter(rent_client=self.request.user)
-
-class RentalList(generics.ListCreateAPIView):
+# check if detail works
+class RentalViewSet(viewsets.ModelViewSet):
     queryset = Rental.objects.all()
     serializer_class = RentalSerializer
 
@@ -191,6 +116,7 @@ class RentalList(generics.ListCreateAPIView):
     def perform_create(self, serializer):
         rent_start = serializer.validated_data['rent_start']
         rent_end = serializer.validated_data['rent_end']
+        
 
         avaliable_cars = CarListing.objects.exclude(
             rental__rent_start__lte=rent_end,
@@ -205,21 +131,93 @@ class RentalList(generics.ListCreateAPIView):
 
         serializer.save(rent_client=self.request.user,car_info=chosen_car, rent_employee=employee)
 
-class MakeList(generics.ListCreateAPIView):
+class MakeViewSet(viewsets.ModelViewSet):
     queryset = Make.objects.all()
     serializer_class = MakeSerializer
-    permission_classes = [IsAdminUser]
-class MakeDetail(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Make.objects.all()
-    serializer_class = MakeSerializer
-    permission_classes = [IsAdminUser]
-
-class CarModelList(generics.ListCreateAPIView):
+    permission_classes = [permissions.IsAdminUser]
+class CarModelViewSet(viewsets.ModelViewSet):
     queryset = CarModel.objects.all()
     serializer_class = CarModelSerializer
     permission_classes = [AllowStaffToCreate]
 
-class CarModelDetail(generics.RetrieveUpdateDestroyAPIView):
-    queryset = CarModel.objects.all()
-    serializer_class = CarModelSerializer
-    permission_classes = [IsAdminUser]
+
+class ServiceViewSet(viewsets.ModelViewSet):
+    queryset = Service.objects.all()
+    serializer_class = ServiceSerializer
+    permission_classes = [permissions.IsAdminUser]
+
+# User views
+class UserViewSet(viewsets.ModelViewSet):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = [permissions.IsAdminUser]
+
+# Car views
+class CarViewSet(viewsets.ModelViewSet):
+    queryset = CarListing.objects.all()
+    serializer_class = CarListingSerializer
+    permission_classes = [AllowStaffToCreate]
+
+
+# service
+# class ServiceList(generics.ListCreateAPIView):
+#     permission_classes = [IsAdminUser]
+#     queryset = Service.objects.all()
+#     serializer_class = ServiceSerializer
+
+# class ServiceDetail(generics.RetrieveUpdateDestroyAPIView):
+#     permission_classes = [IsAdminUser]
+#     serializer_class = ServiceSerializer
+#     queryset = Service.objects.all()
+
+
+
+
+
+# user CRUD
+
+# class UserList(generics.ListCreateAPIView):
+#     permission_classes = [IsAdminUser]
+#     queryset = User.objects.all()
+#     serializer_class = UserSerializer
+
+# class UserDetail(generics.RetrieveUpdateDestroyAPIView):
+#     permission_classes = [IsAdminUser]
+#     serializer_class = UserDetailSerializer
+#     queryset = User.objects.all()
+
+
+
+
+
+
+# done
+
+# class CarList(generics.ListCreateAPIView):
+#     queryset = CarListing.objects.all()
+#     serializer_class = CarListingSerializer
+#     permission_classes = [AllowStaffToCreate]
+
+
+
+# class CarDetail(generics.RetrieveUpdateDestroyAPIView):
+#     serializer_class = CarListingDetailSerializer
+#     queryset = CarListing.objects.all()
+#     permission_classes = [IsAdminUser]
+
+# class RentalDetail(generics.RetrieveUpdateDestroyAPIView):
+#     serializer_class = RentalSerializer
+
+#     def get_permissions(self):
+#         if self.request.user.is_staff:
+#             return [permissions.IsAdminUser()]
+#         else:
+#             return [permissions.IsAuthenticated()]
+
+#     def get_queryset(self):
+#         if self.request.user.is_staff:
+#             return Rental.objects.all()
+#         else:
+#             return Rental.objects.filter(rent_client=self.request.user)
+
+
