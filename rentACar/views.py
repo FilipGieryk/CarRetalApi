@@ -116,7 +116,7 @@ class RentalViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         rent_start = serializer.validated_data['rent_start']
         rent_end = serializer.validated_data['rent_end']
-        
+
 
         avaliable_cars = CarListing.objects.exclude(
             rental__rent_start__lte=rent_end,
@@ -152,11 +152,25 @@ class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
     permission_classes = [permissions.IsAdminUser]
 
+    def get_serializer_class(self):
+        if self.action == 'list':
+            return UserSerializer
+        elif self.action == 'retrieve':
+            return UserDetailSerializer
+        return UserSerializer
+
 # Car views
 class CarViewSet(viewsets.ModelViewSet):
     queryset = CarListing.objects.all()
     serializer_class = CarListingSerializer
     permission_classes = [AllowStaffToCreate]
+
+    def get_serializer_class(self):
+        if self.action == 'list':
+            return CarListingSerializer
+        elif self.action == 'retrieve':
+            return CarListingDetailSerializer
+        return CarListingSerializer
 
 
 # service
