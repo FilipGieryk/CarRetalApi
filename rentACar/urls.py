@@ -15,6 +15,7 @@ urlpatterns = [
     path('api/', include(router.urls)),
     path('', views.index, name = 'index'),
     path('api/reviews/create/<int:pk>', views.CreateReview.as_view(), name='create-review'),
+    path('api/services/create/<int:pk>', views.CreateReview.as_view(), name='create-service'),
     # cars
     # path('cars/', views.CarList.as_view(), name='cars'),
     # path('cars/<int:pk>', views.CarDetail.as_view(), name='get-car'),

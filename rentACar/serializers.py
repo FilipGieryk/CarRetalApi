@@ -24,44 +24,6 @@ class MakeSerializer(serializers.ModelSerializer):
 
 
 
-class RentalSerializer(serializers.ModelSerializer):
-    
-    # rent_employee = serializers.SlugRelatedField(read_only=True, slug_field='username')
-    car_info = serializers.SlugRelatedField(read_only=True, slug_field='registration_plate')
-    price = serializers.ReadOnlyField()
-    rent_client = serializers.HyperlinkedRelatedField(
-        view_name='user-detail',
-        read_only=True
-    )
-    rent_client_slug = serializers.SlugRelatedField(slug_field='username', read_only=True, source='rent_client')
-    rent_employee = serializers.HyperlinkedRelatedField(
-        view_name='user-detail',
-        read_only=True
-    )
-    rent_employee_slug = serializers.SlugRelatedField(slug_field='username', read_only=True, source='rent_employee')
-    create_review_url = serializers.HyperlinkedIdentityField(
-        view_name='create-review',
-        lookup_field='pk'  
-    )
-    class Meta:
-        model = Rental
-        fields ="__all__"
-
-    def to_representation(self,instance):
-        if instance.rent_employee.is_employee:
-            return super().to_representation(instance)
-        return None
-
-    def get_queryset(self):
-        return User.objects.filter(is_employee=True)
-
-
-    def create(self, validated_data):
-        current_user = self.context['request'].user
-
-        validated_data['rent_client'] = current_user
-    
-        return Rental.objects.create(**validated_data)
 
 
     
@@ -72,19 +34,43 @@ class ReviewSerializer(serializers.ModelSerializer):
         view_name='rental-detail',
         read_only=True
     )
-    rental_client = serializers.SerializerMethodField(read_only=True)
-    rental_employee = serializers.SerializerMethodField(read_only=True)
+    rental_client = serializers.ReadOnlyField(source='rental.rent_client.username')
+    rental_employee = serializers.ReadOnlyField(source='rental.rent_employee.username')
 
     class Meta:
         model = Review
         fields ='__all__'
-    def get_rental_client(self, obj):
-        return obj.rental.rent_client.username
+
+  
+class RentalSerializer(serializers.ModelSerializer):
     
-    def get_rental_employee(self, obj):
-        return obj.rental.rent_employee.username
-  
-  
+
+    car_info = serializers.SlugRelatedField(read_only=True, slug_field='registration_plate')
+    price = serializers.ReadOnlyField()
+    rent_client = serializers.HyperlinkedRelatedField(
+        view_name='user-detail',
+        read_only=True
+    )
+    rent_employee = serializers.HyperlinkedRelatedField(
+        view_name='user-detail',
+        read_only=True
+    )
+    create_review_url = serializers.HyperlinkedIdentityField(
+        view_name='create-review',
+        lookup_field='pk'  
+    )
+    reviews = ReviewSerializer(many=True, read_only=True)
+    class Meta:
+        model = Rental
+        fields ="__all__"
+
+    def to_representation(self,instance):
+        if instance.rent_employee.is_employee:
+            return super().to_representation(instance)
+        return None
+
+
+
 
 class UserSerializer(serializers.ModelSerializer):
     rating = serializers.SerializerMethodField(read_only=True)
@@ -138,6 +124,8 @@ class ServiceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Service
         fields ='__all__'
+
+
         
 class CarListingSerializer(serializers.ModelSerializer):
     car_model = serializers.SlugRelatedField(queryset=CarModel.objects.all(), slug_field='model')
@@ -151,28 +139,17 @@ class CarListingSerializer(serializers.ModelSerializer):
 
 class CarListingDetailSerializer(serializers.ModelSerializer):
     car_model = serializers.SlugRelatedField(queryset=CarModel.objects.all(), slug_field='model')
-    services = serializers.SerializerMethodField()
-    rental = serializers.SerializerMethodField()
+    services = ServiceSerializer(many=True, read_only=True)
+    rental = RentalSerializer(many=True, read_only=True)
     create_service_url = serializers.HyperlinkedIdentityField(
         view_name='create-service',
-        lookup_field='pk'  
+        lookup_field='pk',
+        read_only=True
     )
     class Meta:
         model = CarListing  
         fields = "__all__"
 
-    def get_rental(self, obj):
-        request = self.context.get('request')
-        rental_data = Rental.objects.filter(car_info=obj.id)
-        rental_serializer = RentalSerializer(rental_data, many=True, context={'request': request})
-        return rental_serializer.data
-
-
-    def get_services(self,obj):
-        request = self.context.get('request')
-        service_data = Service.objects.filter(damaged_car=obj.id)
-        service_serializer = ServiceSerializer(service_data, many=True, context={'request': request})
-        return service_serializer.data
 
  
 
