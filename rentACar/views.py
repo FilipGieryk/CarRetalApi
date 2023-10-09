@@ -105,6 +105,11 @@ class RentalViewSet(viewsets.ModelViewSet):
         if not avaliable_cars:
             raise serializers.ValidationError({'message': 'no avaliable cars for that date at the moment sorry:l'})
 
+        chosen_car = random.choice(avaliable_cars)
+        employee = random.choice(User.objects.filter(is_employee=True))
+
+        serializer.save(rent_client=self.request.user,car_info=chosen_car, rent_employee=employee)
+
     def perform_update(self, serializer):
         rent_start = serializer.validated_data['rent_start']
         rent_end = serializer.validated_data['rent_end']
