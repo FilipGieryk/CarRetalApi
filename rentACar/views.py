@@ -3,7 +3,7 @@ from .models import  Rental, CarListing, CarModel, Make, User, Review, Service
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth import authenticate, login
-from rest_framework import generics, permissions, viewsets
+from rest_framework import generics, permissions, viewsets, status
 from django.contrib.auth.views import LoginView
 from django.shortcuts import render, redirect
 from rest_framework.response import Response
@@ -13,12 +13,12 @@ from django.urls import reverse_lazy
 from .forms import UserSignUpForm
 from django.urls import reverse
 import random
+from rest_framework.exceptions import PermissionDenied
 
 
 def index(request):
     return render(request, 'base.html')
 
-    # cars CRUD
 
 class AllowStaffToCreate(permissions.BasePermission):
     def has_permission(self, request, view):
@@ -27,14 +27,6 @@ class AllowStaffToCreate(permissions.BasePermission):
         elif request.method == 'POST' and request.user.is_staff:
             return True
         return False 
-
-
-
-
-
-
-
-
 
 class UserSignUpView(CreateView):
     model = User
@@ -68,11 +60,6 @@ class ReviewViewSet(viewsets.ModelViewSet):
         else:
             return Review.objects.filter(rental__rent_client=self.request.user)
 
-    def get_permissions(self):
-        if self.request.user.is_staff:
-            return [permissions.IsAdminUser()]
-        else:
-            return [permissions.IsAuthenticated()]
 
 
 class CreateReview(generics.CreateAPIView):
@@ -95,17 +82,10 @@ class CreateService(generics.CreateAPIView):
         serializer.save(damaged_car=damaged_car)
 
 
-# check if detail works
+
 class RentalViewSet(viewsets.ModelViewSet):
     queryset = Rental.objects.all()
     serializer_class = RentalSerializer
-
-
-    def get_permissions(self):
-        if self.request.user.is_staff:
-            return [permissions.IsAdminUser()]
-        else:
-            return [permissions.IsAuthenticated()]
 
     def get_queryset(self):
         if self.request.user.is_staff:
@@ -114,6 +94,18 @@ class RentalViewSet(viewsets.ModelViewSet):
             return Rental.objects.filter(rent_client=self.request.user)
 
     def perform_create(self, serializer):
+        rent_start = serializer.validated_data['rent_start']
+        rent_end = serializer.validated_data['rent_end']
+
+
+        avaliable_cars = CarListing.objects.exclude(
+            rental__rent_start__lte=rent_end,
+            rental__rent_end__gte=rent_start,
+        )
+        if not avaliable_cars:
+            raise serializers.ValidationError({'message': 'no avaliable cars for that date at the moment sorry:l'})
+
+    def perform_update(self, serializer):
         rent_start = serializer.validated_data['rent_start']
         rent_end = serializer.validated_data['rent_end']
 
@@ -138,100 +130,36 @@ class MakeViewSet(viewsets.ModelViewSet):
 class CarModelViewSet(viewsets.ModelViewSet):
     queryset = CarModel.objects.all()
     serializer_class = CarModelSerializer
-    permission_classes = [AllowStaffToCreate]
-
-
+    permission_classes = [permissions.IsAdminUser]
 class ServiceViewSet(viewsets.ModelViewSet):
     queryset = Service.objects.all()
     serializer_class = ServiceSerializer
     permission_classes = [permissions.IsAdminUser]
 
-# User views
+
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
-    serializer_class = UserSerializer
     permission_classes = [permissions.IsAdminUser]
 
     def get_serializer_class(self):
-        if self.action == 'list':
-            return UserSerializer
-        elif self.action == 'retrieve':
+        if self.action == 'retrieve':
             return UserDetailSerializer
         return UserSerializer
 
-# Car views
+
 class CarViewSet(viewsets.ModelViewSet):
     queryset = CarListing.objects.all()
-    serializer_class = CarListingSerializer
     permission_classes = [AllowStaffToCreate]
 
     def get_serializer_class(self):
-        if self.action == 'list':
-            return CarListingSerializer
-        elif self.action == 'retrieve':
-            return CarListingDetailSerializer
+        if self.action == 'retrieve':
+            if self.request.user.is_staff:
+                return CarListingDetailSerializer
+            else:
+                raise PermissionDenied('You do not have permission to access this resource')
         return CarListingSerializer
 
 
-# service
-# class ServiceList(generics.ListCreateAPIView):
-#     permission_classes = [IsAdminUser]
-#     queryset = Service.objects.all()
-#     serializer_class = ServiceSerializer
 
-# class ServiceDetail(generics.RetrieveUpdateDestroyAPIView):
-#     permission_classes = [IsAdminUser]
-#     serializer_class = ServiceSerializer
-#     queryset = Service.objects.all()
-
-
-
-
-
-# user CRUD
-
-# class UserList(generics.ListCreateAPIView):
-#     permission_classes = [IsAdminUser]
-#     queryset = User.objects.all()
-#     serializer_class = UserSerializer
-
-# class UserDetail(generics.RetrieveUpdateDestroyAPIView):
-#     permission_classes = [IsAdminUser]
-#     serializer_class = UserDetailSerializer
-#     queryset = User.objects.all()
-
-
-
-
-
-
-# done
-
-# class CarList(generics.ListCreateAPIView):
-#     queryset = CarListing.objects.all()
-#     serializer_class = CarListingSerializer
-#     permission_classes = [AllowStaffToCreate]
-
-
-
-# class CarDetail(generics.RetrieveUpdateDestroyAPIView):
-#     serializer_class = CarListingDetailSerializer
-#     queryset = CarListing.objects.all()
-#     permission_classes = [IsAdminUser]
-
-# class RentalDetail(generics.RetrieveUpdateDestroyAPIView):
-#     serializer_class = RentalSerializer
-
-#     def get_permissions(self):
-#         if self.request.user.is_staff:
-#             return [permissions.IsAdminUser()]
-#         else:
-#             return [permissions.IsAuthenticated()]
-
-#     def get_queryset(self):
-#         if self.request.user.is_staff:
-#             return Rental.objects.all()
-#         else:
-#             return Rental.objects.filter(rent_client=self.request.user)
 
 

@@ -113,9 +113,16 @@ class UserDetailSerializer(serializers.ModelSerializer):
             return avg_rating
         else:
             return None
+    def to_representation(self,instance):
+        data = super().to_representation(instance)
+        if data['is_employee'] == False:
+            data.pop('rating', None)
+            data.pop('reviews_given', None)
+            data.pop('rentals_given', None)
+        return data
     class Meta:
         model = User
-        fields = ['username','first_name','last_name','email','balance','is_employee','rentals_made','rating','rentals_given','reviews_made','reviews_given']
+        fields = ['username','first_name','last_name','email','balance','is_employee','rating','rentals_made','reviews_made','rentals_given','reviews_given']
 
 
 class ServiceSerializer(serializers.ModelSerializer):
