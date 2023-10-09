@@ -50,8 +50,6 @@ class IsActiveField(serializers.SerializerMethodField):
 
 
 class RentalSerializer(serializers.ModelSerializer):
-    
-
     car_info = serializers.SlugRelatedField(read_only=True, slug_field='registration_plate')
     price = serializers.ReadOnlyField()
     rent_client = serializers.HyperlinkedRelatedField(
@@ -135,8 +133,8 @@ class UserDetailSerializer(serializers.ModelSerializer):
 
 
 class ServiceSerializer(serializers.ModelSerializer):
-    damaged_car = serializers.SlugRelatedField(read_only=True, slug_field='registration_plate')
     guilty = serializers.SlugRelatedField(queryset=User.objects.all(), slug_field=('username'))
+    damaged_car = serializers.HyperlinkedRelatedField(view_name='car-detail', read_only=True)
     
 
     class Meta:
