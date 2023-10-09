@@ -1,8 +1,8 @@
 from .models import Rental, CarListing, CarModel, Make, User, Review, Service
 from rest_framework import serializers
 from django.db.models import Avg
-
-
+from django.utils import timezone
+from django.urls import reverse
         
 
 
@@ -41,7 +41,14 @@ class ReviewSerializer(serializers.ModelSerializer):
         model = Review
         fields ='__all__'
 
-  
+class IsActiveField(serializers.SerializerMethodField):
+    def to_representation(self, obj):
+        request = self.context.get('request')
+        if obj.rent_start <= timezone.now().date() <= obj.rent_end:
+            return True
+        return False
+
+
 class RentalSerializer(serializers.ModelSerializer):
     
 
@@ -60,6 +67,8 @@ class RentalSerializer(serializers.ModelSerializer):
         lookup_field='pk'  
     )
     reviews = ReviewSerializer(read_only=True)
+    is_active = IsActiveField(read_only=True)
+
     class Meta:
         model = Rental
         fields ="__all__"
@@ -155,12 +164,25 @@ class CarListingDetailSerializer(serializers.ModelSerializer):
         lookup_field='pk',
         read_only=True
     )
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        active_rental = None
+        print(active_rental)
+
+        for rental_data in data['rental']:
+            if rental_data['is_active']:
+                active_rental = rental_data
+                break
+        if active_rental:
+            data['active_rental_url'] = self.context['request'].build_absolute_uri(
+                reverse('rental-detail', kwargs={'pk': active_rental['id']})
+            )
+
+        return data
+
     class Meta:
-        model = CarListing  
-        fields = "__all__"
-
-
- 
+        model = CarListing
+        fields = '__all__'
 
 
         
