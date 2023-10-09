@@ -59,15 +59,17 @@ class RentalSerializer(serializers.ModelSerializer):
         view_name='create-review',
         lookup_field='pk'  
     )
-    reviews = ReviewSerializer(many=True, read_only=True)
+    reviews = ReviewSerializer(read_only=True)
     class Meta:
         model = Rental
         fields ="__all__"
 
     def to_representation(self,instance):
-        if instance.rent_employee.is_employee:
-            return super().to_representation(instance)
-        return None
+        data = super().to_representation(instance)
+        if data['reviews']:
+            data.pop('create_review_url', None)
+        return data
+
 
 
 
