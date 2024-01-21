@@ -2,6 +2,10 @@ from django.contrib.auth.views import LogoutView
 from django.urls import path, include
 from . import views
 from rest_framework import routers
+from graphene_django.views import GraphQLView
+from .schema import schema
+from .views import graphql_view
+
 
 router = routers.DefaultRouter()
 router.register(r'services', views.ServiceViewSet)
@@ -16,6 +20,9 @@ urlpatterns = [
     path('', views.index, name = 'index'),
     path('api/reviews/create/<int:pk>', views.CreateReview.as_view(), name='create-review'),
     path('api/services/create/<int:pk>', views.CreateReview.as_view(), name='create-service'),
+    path('graphql/', GraphQLView.as_view(graphiql=True, schema=schema), name='graphql'),
+    path('graphql/', graphql_view, name='graphql'),
+
     # cars
     # path('cars/', views.CarList.as_view(), name='cars'),
     # path('cars/<int:pk>', views.CarDetail.as_view(), name='get-car'),

@@ -11,7 +11,8 @@ from django.views.generic import CreateView
 from rest_framework import serializers
 from django.urls import reverse_lazy
 from .forms import UserSignUpForm
-from django.urls import reverse
+from django.http import JsonResponse
+from graphene_django.views import GraphQLView
 import random
 from rest_framework.exceptions import PermissionDenied
 
@@ -165,6 +166,8 @@ class CarViewSet(viewsets.ModelViewSet):
         return CarListingSerializer
 
 
-
+def graphql_view(request):
+    view = GraphQLView.as_view(schema=schema, graphiql=True)
+    return view(request)
 
 
