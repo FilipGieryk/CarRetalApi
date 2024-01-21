@@ -58,14 +58,16 @@ class ReviewViewSet(viewsets.ModelViewSet):
     queryset = Review.objects.all()
     serializer_class = ReviewSerializer
     permission_classes = [permissions.IsAuthenticated]
+    def get_serializer_class(self):
+        if self.request.method == 'GET':
+            return ReviewSerializer
+        return None
     def get_queryset(self):
         if self.request.user.is_staff:
             return Review.objects.all()
         else:
             return Review.objects.filter(rental__rent_client=self.request.user)
-    def create(self, request, *args, **kwargs):
-        # Disallow the creation of new reviews
-        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
 
 
 
