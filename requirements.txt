@@ -1,0 +1,5 @@
+graphene_django
+mysqlclient
+djangorestframework
+rest_framework
+
