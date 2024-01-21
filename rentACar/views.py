@@ -63,6 +63,9 @@ class ReviewViewSet(viewsets.ModelViewSet):
             return Review.objects.all()
         else:
             return Review.objects.filter(rental__rent_client=self.request.user)
+    def create(self, request, *args, **kwargs):
+        # Disallow the creation of new reviews
+        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
 
