@@ -48,7 +48,7 @@ class UserLoginView(LoginView):
     template_name = 'login.html'
     def get_success_url(self):
         return reverse_lazy('index')
-class UserLogoutView(
+
 #     def form_invalid(self, form):
 #         messages.error(self.request,"invalid username or password")
 #         return self.render_to_response(self.get_context.data(form=form))
