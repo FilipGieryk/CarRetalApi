@@ -90,7 +90,8 @@ class CreateService(generics.CreateAPIView):
 class RentalViewSet(viewsets.ModelViewSet):
     queryset = Rental.objects.all()
     serializer_class = RentalSerializer
-
+    permission_classes = [permissions.IsAuthenticated]
+    
     def get_queryset(self):
         if self.request.user.is_staff:
             return Rental.objects.all()
