@@ -57,11 +57,7 @@ class UserLoginView(LoginView):
 class ReviewViewSet(viewsets.ModelViewSet):
     queryset = Review.objects.all()
     serializer_class = ReviewSerializer
-    permission_classes = [permissions.IsAuthenticated]
-    def get_serializer_class(self):
-        if self.request.method == 'GET':
-            return ReviewSerializer
-        return None
+    permission_classes = [permissions.IsAuthenticated, AllowStaffToCreate]
     def get_queryset(self):
         if self.request.user.is_staff:
             return Review.objects.all()
