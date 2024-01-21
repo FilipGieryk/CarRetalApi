@@ -5,6 +5,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth import authenticate, login
 from rest_framework import generics, permissions, viewsets, status
 from django.contrib.auth.views import LoginView
+from django.contrib.auth import logout
 from django.shortcuts import render, redirect
 from rest_framework.response import Response
 from django.views.generic import CreateView
