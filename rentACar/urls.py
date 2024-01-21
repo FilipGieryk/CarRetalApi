@@ -5,7 +5,7 @@ from rest_framework import routers
 from graphene_django.views import GraphQLView
 from .schema import schema
 from .views import graphql_view
-
+from .views import custom_logout
 
 router = routers.DefaultRouter()
 router.register(r'services', views.ServiceViewSet)
@@ -45,10 +45,12 @@ urlpatterns = [
 
 
 
+    path('logout/', custom_logout, name='logout'),
+
 
 
     path('signup', views.UserSignUpView.as_view(), name='signup'),
 
     path('login/', views.UserLoginView.as_view(), name='login'),
-    path('logout/', LogoutView.as_view(next_page='/'), name='logout'),
+    
 ]
