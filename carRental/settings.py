@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-so&xt_q114^s84f8-o)+bdf)ycp-89l7gjdi7c6i)n0e9gm^db
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['carrentalapi.onrender.com']
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
