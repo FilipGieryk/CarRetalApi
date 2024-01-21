@@ -74,6 +74,7 @@ class Rental(models.Model):
         days_count = (self.rent_end - self.rent_start) // timedelta(days=1)
         basic_price = self.car_info.basic_price
         self.price = days_count * basic_price
+        self.full_clean()
         super(Rental, self).save(*args, **kwargs)
 
 
