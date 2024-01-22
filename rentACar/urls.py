@@ -19,7 +19,7 @@ urlpatterns = [
     path('api/', include(router.urls)),
     path('', views.index, name = 'index'),
     path('api/reviews/create/<int:pk>', views.CreateReview.as_view(), name='create-review'),
-    path('api/services/create/<int:pk>', views.CreateReview.as_view(), name='create-service'),
+    path('api/services/create/<int:pk>', views.CreateService.as_view(), name='create-service'),
     path('graphql/', GraphQLView.as_view(graphiql=True, schema=schema), name='graphql'),
     path('graphql/', graphql_view, name='graphql'),
 
