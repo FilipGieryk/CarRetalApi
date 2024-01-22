@@ -66,16 +66,17 @@ class RentalSerializer(serializers.ModelSerializer):
     )
     reviews = ReviewSerializer(read_only=True)
     is_active = IsActiveField(read_only=True)
-     def validate(self, data):
+
+    class Meta:
+        model = Rental
+        fields ="__all__"
+
+    def validate(self, data):
         rent_start = data.get('rent_start')
         rent_end = data.get('rent_end')
 
         if rent_start and rent_end and rent_start > rent_end:
             raise serializers.ValidationError({"rent_start": "Start date cannot be greater than end date"})
-
-    class Meta:
-        model = Rental
-        fields ="__all__"
 
     def to_representation(self,instance):
         data = super().to_representation(instance)
